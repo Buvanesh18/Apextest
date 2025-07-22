@@ -29,7 +29,7 @@ jobs:
         run: npm install -g @salesforce/cli
 
       - name: 🔐 Authenticate with Salesforce
-        run: sf org login jwt --client-id ${{ secrets.SF_CONSUMER_KEY }} --jwt-key-file private.key --username ${{ secrets.SF_USERNAME }} --instance-url https://login.salesforce.com --set-default
+        run: sf org login jwt --client-id ${{ secrets.SF_CONSUMER_KEY }} --jwt-key-file assets/server.key --username ${{ secrets.SF_USERNAME }} --instance-url https://login.salesforce.com --set-default
 
       - name: 📥 Install npm deps
         run: npm ci
