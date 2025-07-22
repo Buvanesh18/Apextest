@@ -32,7 +32,7 @@ jobs:
         run: sf org login jwt --client-id ${{ secrets.SF_CONSUMER_KEY }} --jwt-key-file Assets/server.key --username ${{ secrets.SF_USERNAME }} --instance-url https://login.salesforce.com --set-default
 
       - name: 📥 Install npm deps
-        run: npm ci
+        run: npm install
 
       - name: 📦 Prepare Delta Package
         run: |
