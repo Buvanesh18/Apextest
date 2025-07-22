@@ -53,7 +53,6 @@ jobs:
           echo "🔍 Checking delta contents..."
           ls -R delta || echo "⚠️ Delta folder is empty"
 
-      # ✅ PARALLEL TEST + REPORT BLOCK
       - name: 👤 Get Commit Author Email
         shell: pwsh
         env:
@@ -65,6 +64,11 @@ jobs:
       - name: 🔍 Detect Changed Apex Classes
         shell: pwsh
         run: ./scripts/detectChangedApex.ps1
+
+      - name: 🚀 Deploy Delta to QA Org
+        if: env.HAS_APEX_CHANGES == 'true'
+        run: |
+          sf project deploy start --source-dir delta/force-app --target-org ${{ secrets.SF_USERNAME }} --wait 10
 
       - name: 🧪 Run Related Apex Tests (Async)
         shell: pwsh
