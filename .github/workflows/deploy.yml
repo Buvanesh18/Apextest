@@ -56,11 +56,13 @@ jobs:
         if: ${{ hashFiles('delta/force-app/**') != '' }}
         run: |
           sf project deploy start \
-            --source-dir delta/force-app \
-            --target-org ${{ secrets.SF_USERNAME }} \
-            --wait 10 \
-            --ignore-conflicts \
-            --test-level NoTestRun
+           --source-dir delta/force-app/main/default/classes \
+           --source-dir delta/force-app/test/default/classes \
+           --target-org ${{ secrets.SF_USERNAME }} \
+           --wait 10 \
+           --ignore-conflicts \
+           --test-level RunLocalTests
+
 
       # ✅ PARALLEL TEST + REPORT BLOCK
       - name: 👤 Get Commit Author Email
