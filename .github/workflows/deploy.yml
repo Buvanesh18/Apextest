@@ -25,30 +25,44 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install SFDX CLI and Git Plugins
-        shell: bash
-        run: |
-          echo 'Installing sfdx cli'
-          npm install -g @salesforce/cli@latest
-          echo 'Installing sfdx git delta'
-          echo y | sfdx plugins:install sfdx-git-delta
-
+      - name: 🛠 Setup Salesforce CLI
+        uses: sfdx-actions/setup-sfdx@v2
 
       - name: 🔐 Authenticate with Salesforce
-        run: sf org login jwt --client-id ${{ secrets.SF_CONSUMER_KEY }} --jwt-key-file Assets/server.key --username ${{ secrets.SF_USERNAME }} --instance-url https://login.salesforce.com --set-default
-
-      
-
-      - name: 📦 Prepare Delta Package
         run: |
-          mkdir delta
-          npx sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "delta" --generate-delta
+          sf org login jwt \
+            --client-id ${{ secrets.SF_CONSUMER_KEY }} \
+            --jwt-key-file assets/server.key \
+            --username ${{ secrets.SF_USERNAME }} \
+            --instance-url https://login.salesforce.com \
+            --set-default
+
+      - name: 📦 Install sfdx-git-delta plugin
+        run: echo "y" | sf plugins install sfdx-git-delta
+
+      - name: 📂 Generate Delta (sfdx-git-delta)
+        run: |
+          mkdir -p delta
+          git fetch origin
+          npx sfdx sgd:source:delta \
+            --to HEAD \
+            --from HEAD~1 \
+            --output delta \
+            --generate-delta
+
+      - name: 🧾 Debug Delta Contents
+        run: ls -R delta || echo "⚠️ No delta generated"
 
       - name: 🚀 Deploy Metadata to QA
+        if: ${{ hashFiles('delta/force-app/**') != '' }}
         run: |
-          sf project deploy start --source-dir delta/force-app --target-org ${{ secrets.SF_USERNAME }} --wait 10 --ignore-conflicts --test-level NoTestRun
+          sf project deploy start \
+            --source-dir delta/force-app \
+            --target-org ${{ secrets.SF_USERNAME }} \
+            --wait 10 \
+            --ignore-conflicts \
+            --test-level NoTestRun
 
-      # ✅ PARALLEL TEST + REPORT BLOCK
       - name: 👤 Get Commit Author Email
         shell: pwsh
         run: ./pipeline_scripts/gitAuthorMail.ps1
