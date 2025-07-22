@@ -78,7 +78,7 @@ jobs:
         if: env.HAS_APEX_CHANGES == 'true'
         shell: pwsh
         env:
-          USERNAME: ${{ secrets.EMAIL_USERNAME }}
+          USERNAME: ${{ vars.EMAIL_USERNAME }}
           PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           GIT_AUTHOR_EMAIL: ${{ env.gitAuthorEmail }}
         run: ./scripts/sendTestReportEmail.ps1
