@@ -1,15 +1,25 @@
-# detectChangedApex.ps1
+$deltaPath = "delta/force-app/main/default/classes"
 
-$changedFiles = Get-ChildItem -Recurse -Path "delta/force-app/main/default/classes" -Filter *.cls
+if (-Not (Test-Path $deltaPath)) {
+    Write-Host "No Apex classes found in delta. Skipping test detection."
+    "HAS_APEX_CHANGES=false" | Out-File -Append -FilePath $env:GITHUB_ENV
+    exit 0
+}
 
-$changedApex = $changedFiles | Where-Object { $_.Name -notlike "*Test.cls" }
-
-if ($changedApex.Count -gt 0) {
-    Write-Host "✅ Apex class changes detected."
-    $changedApex | ForEach-Object { Write-Host $_.Name }
-    echo "HAS_APEX_CHANGES=true" >> $env:GITHUB_ENV
+$changedFiles = Get-ChildItem -Recurse -Path $deltaPath -Filter *.cls
+if ($changedFiles.Count -eq 0) {
+    Write-Host "No Apex class changes detected."
+    "HAS_APEX_CHANGES=false" | Out-File -Append -FilePath $env:GITHUB_ENV
 } else {
-    Write-Host "❌ No Apex classes changed."
-    echo "HAS_APEX_CHANGES=false" >> $env:GITHUB_ENV
+    Write-Host "Detected changed Apex classes:"
+    $changedFiles.FullName | ForEach-Object { Write-Host $_ }
+
+    # Set environment variable to true
+    "HAS_APEX_CHANGES=true" | Out-File -Append -FilePath $env:GITHUB_ENV
+
+    # Save changed Apex class names to a file for test mapping
+    $changedFiles | ForEach-Object {
+        $_.BaseName
+    } | Set-Content -Path changed_classes.txt
 }
 
