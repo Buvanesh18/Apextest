@@ -25,11 +25,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: 🛠 Install Salesforce CLI
-        run: npm install -g @salesforce/cli
-
-      - name: 📦 Install sfdx-git-delta Plugin
-         run: sf plugins install sfdx-git-delta --no-prompt --force
+      - name: Install SFDX CLI and Git Plugins
+        shell: bash
+        run: |
+          echo 'Installing sfdx cli'
+          npm install -g @salesforce/cli@latest
+          echo 'Installing sfdx git delta'
+          echo y | sfdx plugins:install sfdx-git-delta
 
 
       - name: 🔐 Authenticate with Salesforce
