@@ -31,9 +31,6 @@ jobs:
           echo 'Installing sf CLI'
           npm install -g @salesforce/cli@latest
 
-          echo 'Installing legacy sfdx CLI for compatibility'
-          npm install -g sfdx-cli
-
           echo 'Installing sfdx-git-delta plugin'
           echo y | sfdx plugins:install sfdx-git-delta
 
