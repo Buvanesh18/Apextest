@@ -1,58 +1,62 @@
-# File: .github/workflows/deploy.yml
-
-name: Salesforce Build Pipeline
+name: Salesforce Build Pipeline - QA
 
 on:
   push:
     branches:
       - build/QA
-  pull_request:
-    types: [opened, synchronize]
-    branches:
-      - build/QA
-    paths:
-      - 'force-app/**'
 
 permissions:
   contents: read
   pull-requests: write
 
-env:
-  USERNAME: ${{ vars.EMAIL_USERNAME }}
-  PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-  GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  GIT_SERVER_URL: ${{ vars.GIT_SERVER_URL }}
-  GIT_SOURCE_BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-  GIT_TARGET_BRANCH_NAME: ${{ github.event.pull_request.base.ref }}
-
 jobs:
-  Build:
-    name: Build & Test
+  salesforce-deploy:
     runs-on: ubuntu-latest
+    environment: QA
 
     steps:
-      - name: Checkout Code
+      - name: ⬇️ Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Salesforce CLI
-        run: npm install -g @salesforce/cli
+      - name: 🧰 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-      - name: Get Commit Author Email
+      - name: 🛠 Setup Salesforce CLI
+        uses: sfdx-actions/setup-sfdx@v2
+
+      - name: 🔐 Authenticate with Salesforce
+        run: sf org login jwt --client-id ${{ secrets.SF_CONSUMER_KEY }} --jwt-key-file private.key --username ${{ secrets.SF_USERNAME }} --instance-url https://login.salesforce.com --set-default
+
+      - name: 📥 Install npm deps
+        run: npm ci
+
+      - name: 📦 Prepare Delta Package
+        run: |
+          mkdir delta
+          npx sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "delta" --generate-delta
+
+      - name: 🚀 Deploy Metadata to QA
+        run: |
+          sf project deploy start --source-dir delta/force-app --target-org ${{ secrets.SF_USERNAME }} --wait 10 --ignore-conflicts --test-level NoTestRun
+
+      # ✅ PARALLEL TEST + REPORT BLOCK
+      - name: 👤 Get Commit Author Email
         shell: pwsh
         run: ./scripts/gitAuthorMail.ps1
 
-      - name: Detect Changed Apex Classes
+      - name: 🔍 Detect Changed Apex Classes
         shell: pwsh
         run: ./scripts/detectChangedApex.ps1
 
-      - name: Run Related Tests Asynchronously
+      - name: 🧪 Run Related Apex Tests (Async)
         shell: pwsh
         run: ./scripts/runRelatedTests.ps1
 
-      - name: Send Email to Commit Author
+      - name: 📧 Send Apex Test Report Email
+        if: env.HAS_APEX_CHANGES == 'true'
         shell: pwsh
         run: ./scripts/sendTestReportEmail.ps1
-
-

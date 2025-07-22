@@ -1,19 +1,14 @@
-$changedFiles = git diff --name-only origin/main...HEAD
+# detectChangedApex.ps1
 
-$apexClassesChanged = @()
-foreach ($file in $changedFiles) {
-    if ($file -like "force-app/main/default/classes/*.cls") {
-        $className = [System.IO.Path]::GetFileNameWithoutExtension($file)
-        $apexClassesChanged += $className
-    }
+$changedFiles = Get-ChildItem -Recurse -Path "delta/src/classes" -Filter "*.cls"
+$changedApex = $changedFiles | Where-Object { $_.Name -notlike "*Test.cls" }
+
+if ($changedApex.Count -gt 0) {
+    Write-Host "✅ Apex class changes detected."
+    $changedApex | ForEach-Object { Write-Host $_.Name }
+    echo "HAS_APEX_CHANGES=true" >> $env:GITHUB_ENV
+} else {
+    Write-Host "❌ No Apex classes changed."
+    echo "HAS_APEX_CHANGES=false" >> $env:GITHUB_ENV
 }
 
-if ($apexClassesChanged.Count -eq 0) {
-    Write-Host "No Apex classes changed."
-    echo "APEX_CHANGED=false" >> $env:GITHUB_ENV
-    exit 0
-}
-
-$apexList = $apexClassesChanged -join ","
-echo "CHANGED_CLASSES=$apexList" >> $env:GITHUB_ENV
-echo "APEX_CHANGED=true" >> $env:GITHUB_ENV

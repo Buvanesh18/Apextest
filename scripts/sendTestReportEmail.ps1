@@ -1,18 +1,19 @@
-$emailTo = $env:COMMIT_AUTHOR_EMAIL
-if (-not $emailTo) {
-    Write-Host "No author email found."
-    exit 0
+# sendTestReportEmail.ps1
+
+$testReport = Get-Content "test-result/test-result.txt" -Raw
+$authorEmail = $env:GIT_AUTHOR_EMAIL
+
+if ($authorEmail) {
+    Send-MailMessage -From $env:USERNAME `
+                     -To $authorEmail `
+                     -Subject "✅ Apex Test Execution Report" `
+                     -Body $testReport `
+                     -SmtpServer "smtp.office365.com" `
+                     -Port 587 `
+                     -UseSsl `
+                     -Credential (New-Object System.Management.Automation.PSCredential($env:USERNAME, (ConvertTo-SecureString $env:PASSWORD -AsPlainText -Force)))
+} else {
+    Write-Host "❌ No author email found. Skipping email report."
 }
 
-$subject = "Salesforce Apex Test Report"
-$body = Get-Content test-results/test-result.txt -Raw
-
-Send-MailMessage -To $emailTo `
-                 -From $env:USERNAME `
-                 -Subject $subject `
-                 -Body $body `
-                 -SmtpServer "smtp.yourserver.com" `
-                 -Credential (New-Object PSCredential($env:USERNAME, (ConvertTo-SecureString $env:PASSWORD -AsPlainText -Force))) `
-                 -Port 587 `
-                 -UseSsl
 
