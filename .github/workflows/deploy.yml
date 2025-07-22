@@ -1,0 +1,53 @@
+name: Salesforce QA Test Pipeline
+
+on:
+  push:
+    branches:
+      - build/QA
+    paths:
+      - 'force-app/**'
+
+env:
+  USERNAME: ${{ vars.EMAIL_USERNAME }}
+  PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+
+jobs:
+  SFDX_Apex_Test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli@latest
+
+      - name: Get Previous Commit ID
+        run: echo "PREV_COMMIT_ID=$(git rev-parse HEAD^)" >> $GITHUB_ENV
+
+      - name: Run Detect Changed Apex Classes
+        shell: pwsh
+        run: ./scripts/detectChangedApexClasses.ps1
+
+      - name: Find Related Test Classes
+        shell: pwsh
+        run: ./scripts/findRelatedTestClasses.ps1
+
+      - name: Authenticate to Salesforce Org
+        run: |
+          sf org login jwt `
+            --client-id ${{ secrets.QA_CONSUMERKEY }} `
+            --jwt-key-file Assets/server.key `
+            --username ${{ vars.QA_USERNAME }} `
+            --instance-url ${{ vars.URL }}
+
+      - name: Run Apex Tests
+        shell: pwsh
+        run: ./scripts/runTestsAsync.ps1
+
+      - name: Send Email with Test Results
+        shell: pwsh
+        run: ./scripts/sendTestReport.ps1
+
