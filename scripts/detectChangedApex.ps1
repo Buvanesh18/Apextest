@@ -1,6 +1,7 @@
 # detectChangedApex.ps1
 
-$changedFiles = Get-ChildItem -Recurse -Path "delta/src/classes" -Filter "*.cls"
+$changedFiles = Get-ChildItem -Recurse -Path "delta/force-app/main/default/classes" -Filter *.cls
+
 $changedApex = $changedFiles | Where-Object { $_.Name -notlike "*Test.cls" }
 
 if ($changedApex.Count -gt 0) {
