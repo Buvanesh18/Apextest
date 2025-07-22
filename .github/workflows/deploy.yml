@@ -25,8 +25,9 @@ jobs:
         with:
           node-version: 20
 
-      - name: 🛠 Setup Salesforce CLI
-        uses: sfdx-actions/setup-sfdx@v2
+      - name: Install Salesforce CLI
+         run: npm install -g @salesforce/cli
+
 
       - name: 🔐 Authenticate with Salesforce
         run: sf org login jwt --client-id ${{ secrets.SF_CONSUMER_KEY }} --jwt-key-file private.key --username ${{ secrets.SF_USERNAME }} --instance-url https://login.salesforce.com --set-default
