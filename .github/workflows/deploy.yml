@@ -71,7 +71,12 @@ jobs:
         run: ./scripts/runRelatedTests.ps1
 
       - name: 📧 Send Apex Test Report Email
-        if: env.HAS_APEX_CHANGES == 'true'
-        shell: pwsh
-        run: ./scripts/sendTestReportEmail.ps1
+       if: env.HAS_APEX_CHANGES == 'true'
+       shell: pwsh
+       env:
+           USERNAME: ${{ secrets.EMAIL_USERNAME }}         # e.g., buvanesh@yourdomain.com
+           PASSWORD: ${{ secrets.EMAIL_PASSWORD }}         # App password or login password
+           GIT_AUTHOR_EMAIL: ${{ env.gitAuthorEmail }}     # Set earlier via PowerShell
+       run: ./scripts/sendTestReportEmail.ps1
+
 

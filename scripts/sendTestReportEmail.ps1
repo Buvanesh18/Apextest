@@ -1,9 +1,11 @@
-# sendTestReportEmail.ps1
+# scripts/sendTestReportEmail.ps1
 
 $testReport = Get-Content "test-result/test-result.txt" -Raw
 $authorEmail = $env:GIT_AUTHOR_EMAIL
 
 if ($authorEmail) {
+    Write-Host "📨 Sending email to $authorEmail..."
+
     Send-MailMessage -From $env:USERNAME `
                      -To $authorEmail `
                      -Subject "✅ Apex Test Execution Report" `
