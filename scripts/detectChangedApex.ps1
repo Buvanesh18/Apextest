@@ -1,4 +1,4 @@
-$changedFiles = git diff --name-only origin/main
+$changedFiles = git diff --name-only origin/main...HEAD
 
 $apexClassesChanged = @()
 foreach ($file in $changedFiles) {
@@ -13,9 +13,6 @@ if ($apexClassesChanged.Count -eq 0) {
     echo "APEX_CHANGED=false" >> $env:GITHUB_ENV
     exit 0
 }
-
-Write-Host "Changed Apex Classes:"
-$apexClassesChanged | ForEach-Object { Write-Host "- $_" }
 
 $apexList = $apexClassesChanged -join ","
 echo "CHANGED_CLASSES=$apexList" >> $env:GITHUB_ENV
