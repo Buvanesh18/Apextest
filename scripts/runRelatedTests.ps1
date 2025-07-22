@@ -1,7 +1,7 @@
 # runRelatedTests.ps1
 
 if ($env:HAS_APEX_CHANGES -eq "true") {
-    $classFiles = Get-ChildItem -Recurse -Path "delta/src/classes" -Filter "*.cls" | Where-Object { $_.Name -notlike "*Test.cls" }
+    $classFiles = Get-ChildItem -Recurse -Path "delta/force-app/main/default/classes" -Filter "*.cls" | Where-Object { $_.Name -notlike "*Test.cls" }
     $testClassNames = @()
 
     foreach ($file in $classFiles) {
@@ -22,6 +22,7 @@ if ($env:HAS_APEX_CHANGES -eq "true") {
 } else {
     Write-Host "✅ No Apex class changes detected. Skipping test execution."
 }
+
 
 
 
