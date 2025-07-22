@@ -52,17 +52,6 @@ jobs:
           echo "🔍 Checking delta contents..."
           ls -R delta || echo "⚠️ Delta folder is empty"
 
-      - name: 🚀 Deploy Metadata to QA (only if delta exists)
-        if: ${{ hashFiles('delta/force-app/**') != '' }}
-        run: |
-          sf project deploy start \
-           --source-dir delta/force-app/main/default/classes \
-           --source-dir delta/force-app/test/default/classes \
-           --target-org ${{ secrets.SF_USERNAME }} \
-           --wait 10 \
-           --ignore-conflicts \
-           --test-level RunLocalTests
-
 
       # ✅ PARALLEL TEST + REPORT BLOCK
       - name: 👤 Get Commit Author Email
