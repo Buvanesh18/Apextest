@@ -1,18 +1,33 @@
-name: Salesforce QA Test Pipeline
+# File: .github/workflows/deploy.yml
+
+name: Salesforce Build Pipeline
 
 on:
   push:
     branches:
       - build/QA
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - build/QA
     paths:
       - 'force-app/**'
+
+permissions:
+  contents: read
+  pull-requests: write
 
 env:
   USERNAME: ${{ vars.EMAIL_USERNAME }}
   PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+  GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GIT_SERVER_URL: ${{ vars.GIT_SERVER_URL }}
+  GIT_SOURCE_BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+  GIT_TARGET_BRANCH_NAME: ${{ github.event.pull_request.base.ref }}
 
 jobs:
-  SFDX_Apex_Test:
+  Build:
+    name: Build & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -22,32 +37,22 @@ jobs:
           fetch-depth: 0
 
       - name: Install Salesforce CLI
-        run: npm install -g @salesforce/cli@latest
+        run: npm install -g @salesforce/cli
 
-      - name: Get Previous Commit ID
-        run: echo "PREV_COMMIT_ID=$(git rev-parse HEAD^)" >> $GITHUB_ENV
-
-      - name: Run Detect Changed Apex Classes
+      - name: Get Commit Author Email
         shell: pwsh
-        run: ./scripts/detectChangedApexClasses.ps1
+        run: ./scripts/gitAuthorMail.ps1
 
-      - name: Find Related Test Classes
+      - name: Detect Changed Apex Classes
         shell: pwsh
-        run: ./scripts/findRelatedTestClasses.ps1
+        run: ./scripts/detectChangedApex.ps1
 
-      - name: Authenticate to Salesforce Org
-        run: |
-          sf org login jwt `
-            --client-id ${{ secrets.QA_CONSUMERKEY }} `
-            --jwt-key-file Assets/server.key `
-            --username ${{ vars.QA_USERNAME }} `
-            --instance-url ${{ vars.URL }}
-
-      - name: Run Apex Tests
+      - name: Run Related Tests Asynchronously
         shell: pwsh
-        run: ./scripts/runTestsAsync.ps1
+        run: ./scripts/runRelatedTests.ps1
 
-      - name: Send Email with Test Results
+      - name: Send Email to Commit Author
         shell: pwsh
-        run: ./scripts/sendTestReport.ps1
+        run: ./scripts/sendTestReportEmail.ps1
+
 
