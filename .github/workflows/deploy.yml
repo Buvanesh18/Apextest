@@ -25,15 +25,19 @@ jobs:
         with:
           node-version: 20
 
-      - name: 🛠️ Install SFDX CLI and Git Plugins
+      - name: 🛠️ Install Salesforce CLI and Plugins (sf + sfdx)
         shell: bash
         run: |
-          echo 'Installing Salesforce CLI'
+          echo 'Installing sf CLI'
           npm install -g @salesforce/cli@latest
-          echo 'Installing sfdx-git-delta'
+
+          echo 'Installing legacy sfdx CLI for compatibility'
+          npm install -g sfdx-cli
+
+          echo 'Installing sfdx-git-delta plugin'
           echo y | sfdx plugins:install sfdx-git-delta
 
-      - name: 🔐 Authenticate with Salesforce
+      - name: 🔐 Authenticate with Salesforce (JWT Auth)
         run: |
           sf org login jwt \
             --client-id ${{ secrets.SF_CONSUMER_KEY }} \
@@ -77,3 +81,4 @@ jobs:
           PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
           GIT_AUTHOR_EMAIL: ${{ env.gitAuthorEmail }}
         run: ./scripts/sendTestReportEmail.ps1
+
