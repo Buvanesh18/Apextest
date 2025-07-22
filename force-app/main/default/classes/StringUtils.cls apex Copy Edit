@@ -1,0 +1,13 @@
+public class StringUtils {
+    // Reverses a string
+    public static String reverse(String input) {
+        if (String.isBlank(input)) return '';
+        return input.reverse();
+    }
+
+    // Capitalizes the first letter
+    public static String capitalize(String input) {
+        if (String.isBlank(input)) return '';
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
+    }
+}
