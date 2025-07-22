@@ -1,45 +1,27 @@
-if ($env:APEX_CHANGED -ne "true") {
-    Write-Host "✅ No Apex class changes detected. Skipping test execution."
-    exit 0
-}
+# runRelatedTests.ps1
 
-$testClasses = @()
+if ($env:HAS_APEX_CHANGES -eq "true") {
+    $classFiles = Get-ChildItem -Recurse -Path "delta/src/classes" -Filter "*.cls" | Where-Object { $_.Name -notlike "*Test.cls" }
+    $testClassNames = @()
 
-foreach ($class in $env:CHANGED_CLASSES -split ",") {
-    $testPath = "force-app/test/default/classes/${class}Test.cls"
-    if (Test-Path $testPath) {
-        $testClassName = "${class}Test"
-        Write-Host "✅ Found test class: $testClassName"
-        $testClasses += $testClassName
-    } else {
-        Write-Host "⚠️ No test class found for: $class"
+    foreach ($file in $classFiles) {
+        $baseName = $file.BaseName
+        $testPattern = "$baseName" + "Test.cls"
+        $testFilePath = "force-app/test/default/classes/$testPattern"
+        if (Test-Path $testFilePath) {
+            $testClassNames += $baseName + "Test"
+        }
     }
+
+    if ($testClassNames.Count -gt 0) {
+        Write-Host "▶️ Running tests: $($testClassNames -join ', ')"
+        sf apex run test --tests "$($testClassNames -join ',')" --output-dir test-result --result-format human --wait 10 --async
+    } else {
+        Write-Host "⚠️ No related test classes found."
+    }
+} else {
+    Write-Host "✅ No Apex class changes detected. Skipping test execution."
 }
 
-if ($testClasses.Count -eq 0) {
-    Write-Host "❌ No related test classes found. Skipping test run."
-    exit 0
-}
-
-$testList = $testClasses -join ","
-Write-Host "`n🚀 Running Apex Tests: $testList`n"
-
-if (-not (Test-Path "test-results")) {
-    New-Item -ItemType Directory -Path "test-results" | Out-Null
-}
-
-sf apex run test `
-    --tests $testList `
-    --result-format human `
-    --output-dir test-results `
-    --async `
-    --wait 10
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Test execution failed."
-    exit 1
-}
-
-Write-Host "✅ Tests triggered successfully. Async job started."
 
 
