@@ -15,7 +15,7 @@ if ($env:HAS_APEX_CHANGES -eq "true") {
 
     if ($testClassNames.Count -gt 0) {
         Write-Host "▶️ Running tests: $($testClassNames -join ', ')"
-        sfdx force:apex:test:run --tests "$($testClassNames -join ',')" --resultformat human --outputdir test-result --wait 10 --testlevel RunSpecifiedTests --async 
+        sfdx force:apex:test:run --tests "$($testClassNames -join ',')" --resultformat human --outputdir test-result --wait 10 --testlevel RunSpecifiedTests  
     } else {
         Write-Host "⚠️ No related test classes found."
     }
