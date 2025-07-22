@@ -65,18 +65,18 @@ jobs:
       # ✅ PARALLEL TEST + REPORT BLOCK
       - name: 👤 Get Commit Author Email
         shell: pwsh
-        run: ./pipeline_scripts/gitAuthorMail.ps1
+        run: ./scripts/gitAuthorMail.ps1
 
       - name: 🔍 Detect Changed Apex Classes
         shell: pwsh
-        run: ./pipeline_scripts/detectChangedApex.ps1
+        run: ./scripts/detectChangedApex.ps1
 
       - name: 🧪 Run Related Apex Tests (Async)
         shell: pwsh
-        run: ./pipeline_scripts/runRelatedTests.ps1
+        run: ./scripts/runRelatedTests.ps1
 
       - name: 📧 Send Apex Test Report Email
         if: env.HAS_APEX_CHANGES == 'true'
         shell: pwsh
-        run: ./pipeline_scripts/sendTestReportEmail.ps1
+        run: ./scripts/sendTestReportEmail.ps1
 
