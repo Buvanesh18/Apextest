@@ -65,6 +65,10 @@ jobs:
       # ✅ PARALLEL TEST + REPORT BLOCK
       - name: 👤 Get Commit Author Email
         shell: pwsh
+        env:
+          GIT_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
         run: ./scripts/gitAuthorMail.ps1
 
       - name: 🔍 Detect Changed Apex Classes
