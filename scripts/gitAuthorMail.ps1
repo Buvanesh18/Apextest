@@ -1,30 +1,42 @@
-# Convert GIT_TOKEN into Base64 for Authorization header
+# Get GitHub Token and Repository Info
 $pat = $env:GIT_TOKEN
-$header = @{Authorization = 'Basic ' + [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$($pat)")) }
-
-# Get the commit ID from GitHub context
+$repo = $env:GITHUB_REPOSITORY
 $commitID = $env:GITHUB_SHA
 
-# Prepare the GitHub API URL
-$mergeCommitsUrl = "$env:GIT_SERVER_URL$env:GITHUB_REPOSITORY/commits/$commitID"
-Write-Host "$mergeCommitsUrl"
-$mergeCommitsResponse = Invoke-RestMethod -Uri $mergeCommitsUrl -Headers $header -Method Get 
-$commitAuthorName = $mergeCommitsResponse.author.login
+# GitHub API headers
+$header = @{
+    Authorization = "Bearer $pat"
+    "User-Agent" = "PowerShell"
+}
 
+# Get commit info
+$mergeCommitsUrl = "https://api.github.com/repos/$repo/commits/$commitID"
+Write-Host "Fetching commit info from $mergeCommitsUrl"
+
+try {
+    $mergeCommitsResponse = Invoke-RestMethod -Uri $mergeCommitsUrl -Headers $header -Method Get
+} catch {
+    Write-Error "Failed to fetch commit info: $_"
+    exit 1
+}
+
+$commitAuthorName = $mergeCommitsResponse.author.login
 Write-Host "Commit Author Name: $commitAuthorName"
 
-# Get the commits by the same author
-$commitUrl = "$env:GIT_SERVER_URL$env:GITHUB_REPOSITORY/commits?author=$commitAuthorName&per_page=100"
-$commitResponse = Invoke-RestMethod -Uri $commitUrl -Headers $header -Method Get 
-$commitCount = $commitResponse.Length
+# Get recent commits by that author
+$commitUrl = "https://api.github.com/repos/$repo/commits?author=$commitAuthorName&per_page=100"
+try {
+    $commitResponse = Invoke-RestMethod -Uri $commitUrl -Headers $header -Method Get
+} catch {
+    Write-Error "Failed to fetch commits by author: $_"
+    exit 1
+}
 
 $email = ""
-for ($i = 0; $i -lt $commitCount; $i++) {
-    $authorName = $commitResponse[$i].author.login
-    $authorEmail = $commitResponse[$i].commit.author.email
-
-    if (($commitAuthorName -eq $authorName) -and (!($authorEmail.Contains('noreply')))) {
-        $email = $commitResponse[$i].commit.author.email
+foreach ($commit in $commitResponse) {
+    $authorEmail = $commit.commit.author.email
+    if (!$authorEmail.Contains("noreply")) {
+        $email = $authorEmail
         break
     }
 }
@@ -33,7 +45,5 @@ if ([string]::IsNullOrEmpty($email)) {
     $email = "buvaneshmvp007@gmail.com"
 }
 
-Write-Host "Author Email: $email" 
-echo "gitAuthorEmail=$email" >> $env:GITHUB_ENV
-# $email | Out-File -Append -FilePath $env:GITHUB_ENV
-        
+Write-Host "Author Email: $email"
+"gitAuthorEmail=$email" | Out-File -Append -FilePath $env:GITHUB_ENV
