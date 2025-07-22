@@ -25,35 +25,34 @@ jobs:
         with:
           node-version: 20
 
-      - name: 🛠 Setup Salesforce CLI
-        uses: sfdx-actions/setup-sfdx@v2
+      - name: 🛠️ Install SFDX CLI and Git Plugins
+        shell: bash
+        run: |
+          echo 'Installing Salesforce CLI'
+          npm install -g @salesforce/cli@latest
+          echo 'Installing sfdx-git-delta'
+          echo y | sfdx plugins:install sfdx-git-delta
 
       - name: 🔐 Authenticate with Salesforce
         run: |
           sf org login jwt \
             --client-id ${{ secrets.SF_CONSUMER_KEY }} \
-            --jwt-key-file assets/server.key \
+            --jwt-key-file Assets/server.key \
             --username ${{ secrets.SF_USERNAME }} \
             --instance-url https://login.salesforce.com \
             --set-default
 
-      - name: 📦 Install sfdx-git-delta plugin
-        run: echo "y" | sf plugins install sfdx-git-delta
-
-      - name: 📂 Generate Delta (sfdx-git-delta)
+      - name: 📦 Prepare Delta Package
         run: |
           mkdir -p delta
-          git fetch origin
-          npx sfdx sgd:source:delta \
-            --to HEAD \
-            --from HEAD~1 \
-            --output delta \
-            --generate-delta
+          npx sfdx sgd:source:delta --to "HEAD" --from "HEAD~1" --output "delta" --generate-delta
 
-      - name: 🧾 Debug Delta Contents
-        run: ls -R delta || echo "⚠️ No delta generated"
+      - name: 📂 Debug Delta Output
+        run: |
+          echo "🔍 Checking delta contents..."
+          ls -R delta || echo "⚠️ Delta folder is empty"
 
-      - name: 🚀 Deploy Metadata to QA
+      - name: 🚀 Deploy Metadata to QA (only if delta exists)
         if: ${{ hashFiles('delta/force-app/**') != '' }}
         run: |
           sf project deploy start \
@@ -63,6 +62,7 @@ jobs:
             --ignore-conflicts \
             --test-level NoTestRun
 
+      # ✅ PARALLEL TEST + REPORT BLOCK
       - name: 👤 Get Commit Author Email
         shell: pwsh
         run: ./pipeline_scripts/gitAuthorMail.ps1
@@ -79,3 +79,4 @@ jobs:
         if: env.HAS_APEX_CHANGES == 'true'
         shell: pwsh
         run: ./pipeline_scripts/sendTestReportEmail.ps1
+
