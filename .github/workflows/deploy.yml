@@ -70,9 +70,14 @@ jobs:
         run: |
           sf project deploy start --source-dir delta/force-app --target-org ${{ secrets.SF_USERNAME }} --wait 10
 
-      - name: 🧪 Run Related Apex Tests (Async)
+      - name: 🧪 Trigger Apex Tests Asynchronously
         shell: pwsh
         run: ./scripts/runRelatedTests.ps1
+
+      - name: 📥 Fetch Apex Test Results
+        shell: pwsh
+        run: ./scripts/fetchAsyncTestResults.ps1
+
 
       - name: 📧 Send Apex Test Report Email
         if: env.HAS_APEX_CHANGES == 'true'
