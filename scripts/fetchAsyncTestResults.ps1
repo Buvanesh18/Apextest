@@ -11,12 +11,11 @@ if (Test-Path "test-result/test-run-id.txt") {
         exit 1
     }
 
-    # ✅ Fetch test results
+    # ✅ Fetch test results (fixed: removed --wait)
     sfdx force:apex:test:report `
         --testrunid $testRunId `
         --outputdir test-result `
-        --resultformat human `
-        --wait 10
+        --resultformat human
 } else {
     Write-Host "❌ No test-run-id.txt found. Cannot fetch test results."
     exit 1
