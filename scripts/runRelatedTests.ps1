@@ -16,16 +16,19 @@ if ($env:HAS_APEX_CHANGES -eq "true") {
     if ($testClassNames.Count -gt 0) {
         Write-Host "▶️ Triggering async test run for: $($testClassNames -join ', ')"
 
+      
+
         # Trigger asynchronous test run and capture testRunId
-        $testRunJson = sfdx force:apex:test:run `
+        $testRunJson = sf apex run test `
             --tests "$($testClassNames -join ',')" `
-            --testlevel RunSpecifiedTests `
-            --outputdir test-result `
+            --test-level RunSpecifiedTests `
+            --output-dir test-result `
             --wait 0 `
             --json
 
         $parsed = $testRunJson | ConvertFrom-Json
         $testRunId = $parsed.result.testRunId
+
 
         if ($testRunId) {
             Write-Host "📌 Async TestRunId: $testRunId"
