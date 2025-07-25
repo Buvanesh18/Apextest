@@ -5,4 +5,5 @@ public class ContactUtilsTest {
         Contact c = new Contact(FirstName='Test', LastName='User', Email='test@example.com');
         System.assert(ContactUtils.isEmailValid(c));
     }
+    //change
 }
