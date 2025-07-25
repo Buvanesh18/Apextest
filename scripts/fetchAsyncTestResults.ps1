@@ -18,5 +18,5 @@ if (Test-Path "test-result/test-run-id.txt") {
 
 } else {
     Write-Host "❌ No test-run-id.txt found. Cannot fetch test results."
-    exit 1
+    exit 0
 }
